@@ -28,7 +28,7 @@ $ListFile
 	$Lists | %{ $_ | %{ $MS = $_.senders | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {$_.ListName} }}
 	$Lists | %{ $_ | %{ $MS = $_.Senders | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {[PSCustomObject]@{"List Name"= $_.ListName; "Search Member"= $MS | select-object -expandproperty Email; "Owners"=$_.owners | select-object -expandproperty Email} }} }  | Select-Object "List Name" | cli
 #>
-	$PATHTOLISTEXE = '\\server\C$\Program Files\LISTSERV\MAIN'
+	$PATHTOLISTEXE = '\\LISTS.bucksiu.org\C$\Program Files\LISTSERV\MAIN'
 	$LISTContent =$null
 	$LISTContent = &("$PATHTOLISTEXE\listview.exe") $ListFile
 	$ListName = ""
