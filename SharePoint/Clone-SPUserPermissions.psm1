@@ -108,9 +108,19 @@ $WebAppURL
 .SYNOPSIS
 	Iterates through all SPSecurableObject items in a given web application, and copies any permissions found for the 
 	Source user to the Target user.
+
 	
+.PARAMETER SourceUserID
+	The username of the user whose permissinos should be copied
+.PARAMETER TargetUserID
+	The username of the user who should receive the permissions of the source user.
+.PARAMETER WebAppURL
+	the URL of the web application in which to copy permissions.
 .EXAMPLE
 	Clone-SPUser -SourceUserID "CONTOSO\CBrown" -TargetUserID "CONTOSO\BBarker" -WebAppURL "https://portal.contoso.com"
+	
+.LINK
+http://www.sharepointdiary.com/2015/01/clone-sharepoint-user-permissions-using-powershell.html
 
 #>
 	###Check Whether the Source Users is a Farm Administrator ###
@@ -197,7 +207,6 @@ $WebAppURL
 			if($Web.HasUniqueRoleAssignments -eq $True)
 			{
 				Write-host "Scanning Site:" $Web.Url
-
 				#Call the function to Copy Permissions to TargetUser
 				Copy-UserPermissions $SourceUserID $TargetUserID $Web   
 			}
@@ -208,7 +217,6 @@ $WebAppURL
 			{
 				if($List.HasUniqueRoleAssignments -eq $True -and ($List.Hidden -eq $false))
 				{
-					Write-Host "List: $($List)"
 					#Call the function to Copy Permissions to TargetUser
 					Copy-UserPermissions $SourceUserID $TargetUserID $List
 				}
@@ -220,7 +228,6 @@ $WebAppURL
 				{
 					foreach($folder in $UniqueFolders)
 					{
-						
 						#Call the function to Copy Permissions to TargetUser
 						Copy-UserPermissions $SourceUserID $TargetUserID $folder     
 					}
@@ -233,7 +240,6 @@ $WebAppURL
 				{
 					foreach($item in $UniqueItems)
 					{
-						Write-Host "Item: $($Item)"
 						#Call the function to Copy Permissions to TargetUser
 						Copy-UserPermissions $SourceUserID $TargetUserID $Item 
 					}
