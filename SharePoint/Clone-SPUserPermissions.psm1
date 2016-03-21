@@ -3,7 +3,6 @@ Add-PSSnapin Microsoft.SharePoint.PowerShell -ErrorAction SilentlyContinue
 #Function to copy user permissions
 Function Copy-UserPermissions($SourceUserID, $TargetUserID, [Microsoft.SharePoint.SPSecurableObject]$Object)
 {
-	Write-Host "Object Type: $($SourceUserID), $($TargetUserID) $($Object.GetType().FullName)"
 	#Determine the given Object type and Get URL of it
 	Switch($Object.GetType().FullName)
 	{
