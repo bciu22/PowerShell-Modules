@@ -1,7 +1,6 @@
 $LogName = "O365 License Assignment Script"
 $UserName='o365admin@somedomain.org'
 $Password='somepassword'
-$TargetFolder='C:\Scripts\'
 $StudentOU = "OU=Students,DC=SomeDomain,DC=org"
 $FacultyLicense = "somedomain:STANDARDWOFFPACK_IW_FACULTY"
 $StudentLicense = "somedomain:STANDARDWOFFPACK_IW_STUDENT"
@@ -10,6 +9,7 @@ $DisabledPlans = @()
 #Add plans to disable
 $DisabledPlans += "EXCHANGE_S_STANDARD"
 $smtpTo = "servermonitor@somedomain.org"
+$cn = gc env:computername;
 $smtpFrom = "$cn@somedomain.org"
 $smtpServer = "Mail.somedomain.org"
 #Set UsageLocation

@@ -1,12 +1,10 @@
 [CmdletBinding()]
 Param(
-    [Parameter()]
-    [Switch]$Commit=$False,
-    [Parameter()]
-    [ValidateSet('Error','Verbose','None')]
-    $EmailLevel="Error",
-    [Parameter()]
-    [Switch]$Cleanup=$False
+  [Parameter()]
+  [Switch]$Commit=$False,
+  [Parameter()]
+  [ValidateSet('Error','Verbose','None')]
+  $EmailLevel="Error"
 )
 
 #Import Configuration Parameters
@@ -51,21 +49,21 @@ Import-Module MSOnline
 #Generate the PSCredential
 If (!$userName -or !$Password)
 {
-    #no userName provided
-    If(!$userName)
-    {
-        $Credentials = Get-Credential -Message "Please provide a valid MSOL login"
-    }
-    #username provided, no password
-    Else
-    {
-        $Credentials = Get-Credential -UserName $UserName -Message "Please provide your MSOL login password"
-    }
+  #no userName provided
+  If(!$userName)
+  {
+    $Credentials = Get-Credential -Message "Please provide a valid MSOL login"
+  }
+  #username provided, no password
+  Else
+  {
+    $Credentials = Get-Credential -UserName $UserName -Message "Please provide your MSOL login password"
+  }
 }
 Else
 {
-    $secureString = ConvertTo-SecureString -String $password -AsPlainText -Force
-    $Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $UserName, $secureString
+  $secureString = ConvertTo-SecureString -String $password -AsPlainText -Force
+  $Credentials = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $UserName, $secureString
 }
 
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 102 -Message "Connecting to MsolService"
@@ -80,7 +78,7 @@ Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -E
 #Normalize Student OU
 If(!$StudentOU.StartsWith("*"))
 {
-    $StudentOU = "*" + $StudentOU
+  $StudentOU = "*" + $StudentOU
 }
 
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 105 -Message "Analyzing accounts for Student/Facility licensing"
