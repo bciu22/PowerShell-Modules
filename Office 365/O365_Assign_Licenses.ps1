@@ -67,8 +67,14 @@ Else
 }
 
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 102 -Message "Connecting to MsolService"
-Connect-MsolService -Credential $Credentials
-
+try
+{
+  Connect-MsolService -Credential $Credentials -ErrorAction Stop
+}
+catch
+{
+  Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 125 -Message "Error connecting to MSOL Service. $($_ | out-string)"
+}
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 103 -Message "Searching for all unlicensed accounts"
 #Discover all unlicensed accounts
 $Users = Get-MSOLUser -All 
