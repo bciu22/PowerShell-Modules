@@ -1,4 +1,5 @@
 #Share Config
+$Source = "server.somedomain.org"
 $SourceShares = "SMB-1", "SMB-2"
 $Target = "someotherserver.somedomain.org\Archive`$"
 
