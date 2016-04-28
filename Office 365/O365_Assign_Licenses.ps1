@@ -1,3 +1,20 @@
+<#
+  .SYNOPSIS
+    This script will update O365 licenses and usage locations for students and teachers
+  
+  .DESCRIPTION
+    This connects to O365 through parameters defined in config.ps1 located in the same directory.  It evaluates O365 licenses and usage locations for two license types correlated to the values defined in config.ps1.
+  
+  .PARAMETER Commit
+    False by default.  Setting this flag causes the script to make changes against the O365 environment.  Leaving this flag unset will cause the script to run in "read-only" mode, and no changes will be made.
+  
+  .PARAMETER EmailLevel
+    Specify the circumstances under which this script will send email messages.  On "Error" by default, so email will only be sent if the script encounters an error.  "Verbose" will always send an email upon completion of a run.  "None" will never send an email.
+    
+  .LINK
+    https://support.office.com/en-us/article/Assign-or-unassign-licenses-for-Office-365-for-business-997596b5-4173-4627-b915-36abac6786dc
+
+#>
 [CmdletBinding()]
 Param(
   [Parameter()]
@@ -6,9 +23,17 @@ Param(
   [ValidateSet('Error','Verbose','None')]
   $EmailLevel="Error"
 )
-
+$LogName = "O365 License Assignment Script"
 #Import Configuration Parameters
-. "$PSScriptRoot\config.ps1"
+try
+{
+  . "$PSScriptRoot\config.ps1"
+}
+catch
+{
+  Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 126 -Message "Error loading config file.  Stopping execution.  Please ensure that config.ps1 is present in the same directory as the script, and that it is valid."
+  Break
+}
 #Script Defaults
 #create emtpy arrays for staff/students
 $Faculty = @()
@@ -200,7 +225,10 @@ If($EmailLevel -eq "Error")  #If there were errors, and the parameters indicate 
     Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 122 -Message "Execution Finished.  Errors Detected. Sending Events Email"
     $sendMail = $true
   }
-  Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 125 -Message "Execution Finished.  No Errors Detected. Not Sending Events Email"
+  else
+  {
+    Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 125 -Message "Execution Finished.  No Errors Detected. Not Sending Events Email"
+  }
 }
 
 Elseif ($EmailLevel -eq "Verbose")  #If the parameters indicate to always email, set sendMail flag

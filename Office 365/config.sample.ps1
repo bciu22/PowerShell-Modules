@@ -1,4 +1,3 @@
-$LogName = "O365 License Assignment Script"
 $UserName='o365admin@somedomain.org'
 $Password='somepassword'
 $StudentOU = "OU=Students,DC=SomeDomain,DC=org"
