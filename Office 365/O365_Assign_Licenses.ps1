@@ -24,6 +24,11 @@ Param(
   $EmailLevel="Error"
 )
 $LogName = "O365 License Assignment Script"
+#Setup Logging
+if(![System.Diagnostics.EventLog]::SourceExists($LogName))
+{
+  New-EventLog -LogName "Application" -Source $LogName
+}
 #Import Configuration Parameters
 try
 {
@@ -44,11 +49,7 @@ $FacultyPlanService = New-MsolLicenseOptions -AccountSkuId $FacultyLicense -Disa
 $StudentPlanService = New-MsolLicenseOptions -AccountSkuId $StudentLicense -DisabledPlans $DisabledPlans
 
 
-#Setup Logging
-if(![System.Diagnostics.EventLog]::SourceExists($LogName))
-{
-  New-EventLog -LogName "Application" -Source $LogName
-}
+
 
 #Setup Email Destination for Reporting
 $Now = Get-Date
