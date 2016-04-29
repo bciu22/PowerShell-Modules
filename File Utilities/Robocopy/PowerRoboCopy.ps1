@@ -9,6 +9,9 @@
     Specify the circumstances under which this script will send email messages.  On "Error" by default, so email will only be sent if the script encounters an error.  "Verbose" will always send an email upon completion of a run.  "None" will never send an email.
     
   .LINK
+  
+  .NOTES
+    Authors: Charles Crossan, Dan Lezoche
 
 #>
 [CmdletBinding()]

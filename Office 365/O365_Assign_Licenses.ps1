@@ -13,6 +13,9 @@
     
   .LINK
     https://support.office.com/en-us/article/Assign-or-unassign-licenses-for-Office-365-for-business-997596b5-4173-4627-b915-36abac6786dc
+  
+  .NOTES
+    Authors: Charles Crossan, Dan Lezoche
 
 #>
 [CmdletBinding()]
