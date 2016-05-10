@@ -23,7 +23,7 @@ catch
   Write-Error "Unable to load config file.  Exiting."
   break
 }
-$timer = 5
+$timer = 60
 while ($true)
 {
 
@@ -38,7 +38,7 @@ while ($true)
         Start-Service $ServiceName -ErrorAction Stop
         Write-Verbose "Service Restarted"
         Send-MailMessage -To $smtpTo -From $smtpFrom -Subject "Service Failed: $ServiceName" -Body "Service Failed: $ServiceName.  It has been restarted" -SmtpServer $smtpServer
-        $timer = 5
+        $timer = 60
     }
     catch
     {
