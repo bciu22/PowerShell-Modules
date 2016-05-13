@@ -19,11 +19,20 @@ $Application
             $NewPath = $OldPath.Replace($SourceServerFQDN, $DestServerFQDN)
             if ($NewPath -ne $OldPath)
             {
-                Write-Verbose "Updating $OldPath to $NewPath"
-                Set-CMScriptDeploymentType –ApplicationName $Application.LocalizedDisplayName –DeploymentTypeName $DeploymentType.LocalizedDisplayName –ContentLocation $NewPath
+                if($DeploymentType.Technology -eq "MSI")
+                {
+                    Write-Verbose "Updating $OldPath to $NewPath"
+                    $DeploymentType | Set-CMMSIDeploymentType  –ContentLocation $NewPath
+
+                }
+                else
+                {
+                    Write-Verbose "Updating $OldPath to $NewPath"
+                    $DeploymentType |Set-CMScriptDeploymentType –ContentLocation $NewPath
+                }
             }
         }
-        }
+      }
 }
 
 Function Update-AllApplicationSourcePath
@@ -81,7 +90,7 @@ $SourceServerFQDN,
 $DestServerFQDN
 )
 
-    Get-CMDriver | Update-AllDriverSourcePath -SourceServerFQDN $SourceServerFQDN -DestServerFQDN $DestServerFQDN
+    Get-CMDriver | Update-DriverSourcePath -SourceServerFQDN $SourceServerFQDN -DestServerFQDN $DestServerFQDN
 }
 
 Function Get-AllDriverSourcePath
