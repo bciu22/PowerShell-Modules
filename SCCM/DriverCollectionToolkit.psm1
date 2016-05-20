@@ -106,19 +106,19 @@
 
 Function Ensure-Drivers
 {
-    $BadDevices = Get-WmiObject Win32_PNPEntity | Where-Object{$_.Availability -eq 11 -or $_.Availability -eq 12}
-    
-    if($BadDevices)
+    $naughtyDevices = Get-WmiObject -Class Win32_PnpEntity -ComputerName localhost -Namespace Root\CIMV2 | Where-Object {$_.ConfigManagerErrorCode -gt 0 }
+
+    $objReturn = @()
+    ForEach($device in $naughtyDevices)
     {
-        Foreach($Device in $BadDevices)
-        {
-            Write-Error "Device drivers missing for: $($device.name)"
+        $objDevice = [PSCustomObject]@{
+            Name = $device.Name
+            DeviceID = $device.DeviceID
+            ErrorCode = $device.ConfigManagerErrorCode
         }
-
+        $objReturn += $objDevice
     }
-
-
-
+    return $objReturn
 }
 
 Function Gather-Drivers
@@ -190,8 +190,14 @@ Param(
     {
         Add-Type -Assembly ‘System.IO.Compression.FileSystem’ -PassThru
         $ModelName = Get-DeviceModelName
-        Remove-Item -Path "$($env:TEMP)\DriverArchive\$($ModelName)" -Recurse -Force
-        Remove-Item -Path "$($env:USERPROFILE)\Desktop\$($ModelName).zip" -Force
+        If(Test-Path -Path "$($env:TEMP)\DriverArchive\$($ModelName)")
+        {
+            Remove-Item -Path "$($env:TEMP)\DriverArchive\$($ModelName)" -Recurse -Force
+        }
+        If(Test-Path -Path "$($env:USERPROFILE)\Desktop\$($ModelName).zip")
+        {
+            Remove-Item -Path "$($env:USERPROFILE)\Desktop\$($ModelName).zip" -Force
+        }
         $NewPath = New-Item -Path "$($env:TEMP)\DriverArchive" -ItemType Directory -Name $ModelName -Force
     }
 
@@ -228,11 +234,20 @@ $AddToTaskSequences,
 $ExportToZIP = $true
 
 )
-
-   <# if (Ensure-Drivers)  //Check that all drivers on the system are working.   Prompt if not so.  Otherwise continue gathering.
+    #If there are naughty device drivers (missing, etc.) prompt user
+    if ($missingDrivers = Ensure-Drivers)
     {
-
-    }#>
+        $missingDrivers | FT
+        $input = ""
+        While($input -notmatch '[yYnN]')
+        {
+            $input = Read-Host -Prompt "Missing\Invalid drivers detected, continue (y|n)"
+        }
+        If($input -ine "y")
+        {
+            return
+        }
+    }
 
     $Drivers = Gather-Drivers | ?{@("Printer","USB","System") -notcontains $_.INFProperties.Version.Class}
     if($ExportToZIP)
@@ -247,6 +262,4 @@ $ExportToZIP = $true
     {
         $Drivers | Add-CMDriversToTaskSequence
     }
-
-
 }
