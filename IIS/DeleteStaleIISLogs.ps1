@@ -48,6 +48,7 @@ catch
 
 # Get today's date
 $Now = Get-Date
+$mailSubject = $cn + ": DeleteStaleIISLogs " + $Now
 $mailBody = "$cn" + " $Now " + "`r`n`r`n"
 
 # Calculate stale date
