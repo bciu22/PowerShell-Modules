@@ -29,7 +29,7 @@ Param(
   [ValidateSet('Error','Verbose','None')]
   $EmailLevel="Error"
 )
-$LogName = "Log File Cleanup Script"
+$LogName = "IIS Log File Cleanup Script"
 #Setup Logging
 if(![System.Diagnostics.EventLog]::SourceExists($LogName))
 {
