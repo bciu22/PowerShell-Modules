@@ -126,14 +126,13 @@ Try {
         }
 		
 		## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
-		#Show-InstallationWelcome -CloseApps "iexplore,firefox,chrome" -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt
+		#Show-InstallationWelcome -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt
 		
 		## Show Progress Message (with the default message)
 		Show-InstallationProgress
 		
 		## <Perform Pre-Installation tasks here>
-		#Stop-Process -Name "iexplore,firefox,chrome" -Force
-		
+				
 		##*===============================================
 		##* INSTALLATION 
 		##*===============================================
@@ -143,7 +142,7 @@ Try {
 		If ($useDefaultMsi) { Execute-MSI -Action 'Install' -Path $defaultMsiFile }
 		
 		## <Perform Installation tasks here>
-		$results = Execute-Process -Path 'E7450A10.exe' -Parameters '/s /l=C:\Windows\Logs\Software\E7450A10_BIOS_Update.txt /p=PASSWORD' -PassThru
+		$results = Execute-Process -Path 'E7450A10.exe' -Parameters '/s /l=C:\Windows\Logs\Software\E7450A10_BIOS_Update.log /p=PASSWORD' -PassThru
         $mainExitCode = $results.ExitCode
         Switch ($mainExitCode) {
             0 { Write-Log -Message "Return Code 0 - Successful" }
@@ -157,16 +156,12 @@ Try {
             default { Write-Log -Message "Unknown return code $mainExitCode" }
         }
 
-
-        #Execute-MSI -Action 'Install' -Path 'Media-Player_Windows_006_001_001.msi' -PassThru		
-
 		##*===============================================
 		##* POST-INSTALLATION
 		##*===============================================
 		[string]$installPhase = 'Post-Installation'
 		
 		## <Perform Post-Installation tasks here>
-        #If (Test-Path -Path "C:\Users\Public\Desktop\VLC media player.lnk") { Remove-File -Path "C:\Users\Public\Desktop\VLC media player.lnk" }
 		
 		## Display a message at the end of the install
 		If (-not $useDefaultMsi) { Show-InstallationPrompt -Message "$AppName - $AppVersion installation complete." -ButtonRightText 'OK' -Icon Information -NoWait }
@@ -179,13 +174,12 @@ Try {
 		[string]$installPhase = 'Pre-Uninstallation'
 		
 		## Show Welcome Message, close Internet Explorer with a 60 second countdown before automatically closing
-		#Show-InstallationWelcome -CloseApps 'vlc' -CloseAppsCountdown 60
+		#Show-InstallationWelcome -CloseAppsCountdown 60
 		
 		## Show Progress Message (with the default message)
 		Show-InstallationProgress
 		
 		## <Perform Pre-Uninstallation tasks here>
-		#Stop-Process -Name vlc -Force
 		
 		##*===============================================
 		##* UNINSTALLATION
@@ -196,15 +190,6 @@ Try {
 		If ($useDefaultMsi) { Execute-MSI -Action 'Uninstall' -Path $defaultMsiFile }
 		
 		# <Perform Uninstallation tasks here>
-        #Execute-MSI -Action 'Uninstall' -Path 'Media-Player_Windows_006_001_001.msi' -PassThru
-		#If (Test-Path -Path "C:\Program Files (x86)\VideoLAN\VLC\uninstall.exe")
-        #{
-        #    Execute-Process -Path "C:\Program Files (x86)\VideoLAN\VLC\uninstall.exe" -Parameters '/S'
-        #}
-        #ElseIf (Test-Path -Path "C:\Program Files\VideoLAN\VLC\uninstall.exe")
-        #{
-        #    Execute-Process -Path "C:\Program Files\VideoLAN\VLC\uninstall.exe" -Parameters '/S'
-        #}
 		
 		##*===============================================
 		##* POST-UNINSTALLATION
@@ -212,8 +197,6 @@ Try {
 		[string]$installPhase = 'Post-Uninstallation'
 		
 		## <Perform Post-Uninstallation tasks here>
-		
-		
 	}
 	
 	##*===============================================

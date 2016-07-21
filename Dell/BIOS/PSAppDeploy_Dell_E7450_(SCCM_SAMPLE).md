@@ -16,7 +16,8 @@ If($Bios.SMBIOSBIOSVersion -ge $BiosMinimum)
 ```
 
 #SCCM Return Code (Dell BIOS Returns are non-standard)
-Value: 2
-Code Type: Soft Reboot
-Name: REBOOT_REQUIRED
-Description: c/o Dell's 'Dell Update Package' documentation - a return code of 2 requires a reboot to complete
+
+ - Value: 2 
+ - Code Type: Soft Reboot 
+ - Name: REBOOT_REQUIRED 
+ - Description: c/o Dell's 'Dell Update Package' documentation - a return code of 2    requires a reboot to complete
