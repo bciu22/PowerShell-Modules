@@ -26,7 +26,9 @@ Param(
   [Switch]$UpdateAllLicenses=$False,
   [Parameter()]
   [ValidateSet('Error','Verbose','None')]
-  $EmailLevel="Error"
+  $EmailLevel="Error",
+  [Parameter()]
+  $UserLimit=0
 )
 $LogName = "O365 License Assignment Script"
 #Setup Logging
@@ -168,8 +170,15 @@ catch
   Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 125 -Message "Error connecting to MSOL Service. $($_ | out-string)"
 }
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 103 -Message "Searching for all unlicensed accounts"
-#Discover all unlicensed accounts
-$Users = Get-MSOLUser -All 
+#Discover all unlicensed accounts up to the user limit parameter
+if($UserLimit -eq 0)
+{
+  $Users = Get-MSOLUser -All 
+}
+else {
+   $Users = Get-MSOLUser -MaxResults $UserLimit
+}
+
 $Unlicensed = $Users | Where-Object{$_.IsLicensed -ne $True}
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 104 -Message "Unlicensed accounts found: $($Unlicensed.Count)"
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 127 -Message "Total accounts found: $($Users.Count)"
