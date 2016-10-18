@@ -257,7 +257,7 @@ If ($Students.count -gt 0)
   ForEach($student in $Students)
   {
     #Apply licensing
-    Set-O365License -UserPrincipalName $student -License $StudentLicense -LicenseOptions $StudentPlanService -Commit $Commit
+    Set-O365License -MSOLUserAccount $student -License $StudentLicense -LicenseOptions $StudentPlanService -Commit $Commit
   }
 }
 Else
@@ -272,7 +272,7 @@ If ($Faculty.count -gt 0)
   ForEach($staff in $Faculty)
   {
     #Apply licensing
-    Set-O365License -UserPrincipalName $staff -License $FacultyLicense -LicenseOptions $FacultyPlanService -Commit $Commit
+    Set-O365License -MSOLUserAccount $staff -License $FacultyLicense -LicenseOptions $FacultyPlanService -Commit $Commit
   }
 }
 Else
@@ -312,7 +312,6 @@ else
 
 if($sendMail)  # If sendMail flag is set, then generate the message, and send it
 {
-  $Events = Get-EventLog -LogName "Application" -Source $LogName -After $(Get-Date -Hour 0 -Minute 0 -Second 0).AddDays(-1)
   $mailBody += $Events | Select-Object -Property TimeGenerated, EventID, EntryType, Source, Message | ConvertTo-HTML -Head $mailHead|  Out-String
   Send-MailMessage -To $smtpTo -From $smtpFrom -Subject $mailSubject -BodyAsHtml -Body $mailBody -SmtpServer $smtpServer
 }
