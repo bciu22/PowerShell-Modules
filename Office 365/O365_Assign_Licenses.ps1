@@ -108,6 +108,7 @@ Unable to update license options
 #create emtpy arrays for staff/students
 $Faculty = @()
 $Students = @()
+$ProblemAccounts = @()
 
 #Configure services to be applied
 $FacultyPlanService = New-MsolLicenseOptions -AccountSkuId $FacultyLicense -DisabledPlans $DisabledPlans
@@ -201,15 +202,22 @@ ForEach($User in $UsersToProcess)
   }
   Else
   {
-    $Faculty += $User
-  }
-  else
-  {
-    $ProblemAccounts += $User
+    if ($x)
+    {
+      $Faculty += $User
+    }
+    else
+    {
+      $ProblemAccounts += $User
+    }
   }
 }
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 106 -Message "Students: $($Students.Count)"
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 107 -Message "Facility: $($Faculty.Count)"
+if ($ProblemAccounts.count -gt 0)
+{
+  Write-EventLog -LogName "Application" -Source $LogName -EntryType Warning -EventID 128 -Message "Problem Accounts ($($ProblemAccounts.Count)): `r`n$($ProblemAccounts -join "`r`n")"
+}
 
 #Resolve UsageLocation if incorrect/unassigned
 $NonUSUsageLocation = $Users | Where-Object{$_.UsageLocation -ne "US"}
