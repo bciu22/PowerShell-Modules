@@ -23,6 +23,8 @@ Param(
   [Parameter()]
   [Switch]$Commit=$False,
   [Parameter()]
+  [Switch]$UpdateAllLicenses=$False,
+  [Parameter()]
   [ValidateSet('Error','Verbose','None')]
   $EmailLevel="Error"
 )
@@ -169,6 +171,7 @@ Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -E
 $Users = Get-MSOLUser -All 
 $Unlicensed = $Users | Where-Object{$_.IsLicensed -ne $True}
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 104 -Message "Unlicensed accounts found: $($Unlicensed.Count)"
+Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 127 -Message "Total accounts found: $($Users.Count)"
 
 #Normalize Student OU
 If(!$StudentOU.StartsWith("*"))
@@ -178,7 +181,16 @@ If(!$StudentOU.StartsWith("*"))
 
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 105 -Message "Analyzing accounts for Student/Facility licensing"
 #Determine students/faculty based on UPN and AD OU
-ForEach($User in $Unlicensed)
+if ($UpdateAllLicenses)
+{
+  #If the UpdateAllLicenses flag was set, then we should update the license for the entire found set of users
+  $UsersToProcess = $Users
+}
+else {
+  #If the UpdateAllLicenses flag was not set, then we should only set the license for unlicensed users
+  $UsersToProcess = $Unlicensed
+}
+ForEach($User in $UsersToProcess)
 {
   #Get the AD Object based on UPN, which MSonline 
   $x = Get-ADUser -Filter {UserPrincipalName -eq $User.UserPrincipalName}
@@ -191,9 +203,13 @@ ForEach($User in $Unlicensed)
   {
     $Faculty += $User
   }
+  else
+  {
+    $ProblemAccounts += $User
+  }
 }
-Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 106 -Message "Unlicensed Students: $($Students.Count)"
-Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 107 -Message "Unlicensed Facility: $($Faculty.Count)"
+Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 106 -Message "Students: $($Students.Count)"
+Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 107 -Message "Facility: $($Faculty.Count)"
 
 #Resolve UsageLocation if incorrect/unassigned
 $NonUSUsageLocation = $Users | Where-Object{$_.UsageLocation -ne "US"}
