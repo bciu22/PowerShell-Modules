@@ -4,9 +4,11 @@ $StudentOU = "OU=Students,DC=SomeDomain,DC=org"
 $FacultyLicense = "somedomain:STANDARDWOFFPACK_IW_FACULTY"
 $StudentLicense = "somedomain:STANDARDWOFFPACK_IW_STUDENT"
 #Initialize an empty array, in the event this needs to contain multiple SKUs
-$DisabledPlans = @()
+$FacultyDisabledPlans = @()
+$StudentDisabledPlans = @()
 #Add plans to disable
-$DisabledPlans += "EXCHANGE_S_STANDARD"
+$FacultyDisabledPlans += "EXCHANGE_S_STANDARD"
+$StudentDisabledPlans += "EXCHANGE_S_STANDARD"
 $smtpTo = "servermonitor@somedomain.org"
 $cn = gc env:computername;
 $smtpFrom = "$cn@somedomain.org"

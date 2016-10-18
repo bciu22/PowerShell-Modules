@@ -11,6 +11,12 @@
   .PARAMETER EmailLevel
     Specify the circumstances under which this script will send email messages.  On "Error" by default, so email will only be sent if the script encounters an error.  "Verbose" will always send an email upon completion of a run.  "None" will never send an email.
     
+  .PARAMETER UpdateAllLicenses
+    If set to true, then update the "DisabledPlans" for all O365 users.  Otherwise, only apply licenses to unlicensed users.
+  
+  .PARAMETER UserLimit
+    If set to 0, operate on all users.  Else, limit O365 users to this value.
+  
   .LINK
     https://support.office.com/en-us/article/Assign-or-unassign-licenses-for-Office-365-for-business-997596b5-4173-4627-b915-36abac6786dc
   
@@ -113,8 +119,8 @@ $Students = @()
 $ProblemAccounts = @()
 
 #Configure services to be applied
-$FacultyPlanService = New-MsolLicenseOptions -AccountSkuId $FacultyLicense -DisabledPlans $DisabledPlans
-$StudentPlanService = New-MsolLicenseOptions -AccountSkuId $StudentLicense -DisabledPlans $DisabledPlans
+$FacultyPlanService = New-MsolLicenseOptions -AccountSkuId $FacultyLicense -DisabledPlans $FacultyDisabledPlans
+$StudentPlanService = New-MsolLicenseOptions -AccountSkuId $StudentLicense -DisabledPlans $StudentDisabledPlans
 
 
 
