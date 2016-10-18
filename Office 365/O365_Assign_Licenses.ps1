@@ -202,18 +202,18 @@ ForEach($User in $UsersToProcess)
   }
   Else
   {
-    if ($x)
+    if ($x)  # If the local AD object exists, and it's not a student then assume a faculty
     {
       $Faculty += $User
     }
-    else
+    else  #If the local AD Object doesn't exist, then this is a problem user.
     {
       $ProblemAccounts += $User
     }
   }
 }
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 106 -Message "Students: $($Students.Count)"
-Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 107 -Message "Facility: $($Faculty.Count)"
+Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 107 -Message "Faculty: $($Faculty.Count)"
 if ($ProblemAccounts.count -gt 0)
 {
   Write-EventLog -LogName "Application" -Source $LogName -EntryType Warning -EventID 128 -Message "Problem Accounts ($($ProblemAccounts.Count)): `r`n$($ProblemAccounts -join "`r`n")"
