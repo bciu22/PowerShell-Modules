@@ -30,6 +30,7 @@ Param(
   [Parameter()]
   $UserLimit=0
 )
+$ExecutionStartTime = Get-Date
 $LogName = "O365 License Assignment Script"
 #Setup Logging
 if(![System.Diagnostics.EventLog]::SourceExists($LogName))
@@ -74,9 +75,10 @@ Function Set-O365License
         if ($OperableLicense.count -eq 1 )
         {
           Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 119 -Message "User $($MSOLUserAccount.UserPrincipalName) has the $License assigned.  Setting DisabledPlans to: $($LicenseOptions.DisabledServicePlans -join ',')  "
-          $MSOLUserAccount | Set-MsolUserLicense -LicenseOptions $LicenseOptions
+          $MSOLUserAccount | Set-MsolUserLicense -LicenseOptions $LicenseOptions -ErrorAction "Stop"
         }
-        else {
+        else 
+        {
           # The user IS LICENSED in some capacity, but not with the desired license AccountSkuID.  Instead of klobbering the existing license, let's generate a warning in the event log.
           $UserAssignedLicenses = $($MSOLUserAccount.Licenses | Select-Object -ExpandProperty AccountSkuID) -join ','
           Write-EventLog -LogName "Application" -Source $LogName -EntryType Warning -EventID 118 -Message @"
@@ -85,24 +87,22 @@ Currently assigned licenses are: $UserAssignedLicenses.
 Unable to update license options
 "@
         }
-
-
       }
       else 
       {
         #User account was not licensed.  Add the supplied license to the account
-        Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 120 -Message "User $($MSOLUserAccount.UserPrincipalName) was not previously licensed.  Applying the $License."
+        Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 120 -Message "User $($MSOLUserAccount.UserPrincipalName) was not previously licensed.  Applying license: $License."
         $MSOLUserAccount | Set-MsolUserLicense  -AddLicenses $License -LicenseOptions $LicenseOptions -ErrorAction "Stop"
       }
     }
-    Catch
+    catch
     {
       Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 114 -Message "Assign License Failed $($_ | out-string)"
     }
   }
-  Else
+  else
   {
-    Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 115 -Message "WhatIf: Assigning license: $StudentLicense to $student"
+    Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 115 -Message "WhatIf: Assigning license: $License to $($MSOLUserAccount.UserPrincipalName)"
   }   
 }
 
@@ -281,7 +281,7 @@ Else
 }
 
 #Get the Events from the Error Log
-$Events = Get-EventLog -LogName "Application" -Source $LogName -After $(Get-Date -Hour 0 -Minute 0 -Second 0).AddDays(-1)
+$Events = Get-EventLog -LogName "Application" -Source $LogName -After $ExecutionStartTime
 #Count the errors
 $ErrorCount =  $Events | ?{$_.EntryType -eq "Error" }  | Measure-Object | Select-Object -ExpandProperty Count
 
