@@ -42,6 +42,66 @@ catch
   Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 126 -Message "Error loading config file.  Stopping execution.  Please ensure that config.ps1 is present in the same directory as the script, and that it is valid."
   Break
 }
+
+Function Set-O365License
+{
+  <#
+    .DESCRIPTION
+      This function will SET the license for an O365 User.   It is a wrapper function for the Set-MsolUserLicense function that addresses 
+      some weaknesses with the default function such as altering licenses on existing accounts.
+
+  #>
+  param(
+    $MSOLUserAccount,
+    $License,
+    $LicenseOptions,
+    $Commit
+  )
+  If($Commit)
+  {
+    Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 113 -Message "Processing license: $License for $($MSOLUserAccount.UserPrincipalName)"
+    Try
+    {
+      ##### Here, we need to see what licenses the user already has, and deal with the delta
+      if($MSOLUserAccount.isLicensed)
+      {
+        #Since there are multiple license SKUs, we must determine if the user actually has the desired license on their account.
+        $OperableLicense = $MSOLUserAccount.Licenses | ?{$_.AccountSkuID -eq $License}
+        if ($OperableLicense.count -eq 1 )
+        {
+          Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 119 -Message "User $($MSOLUserAccount.UserPrincipalName) has the $License assigned.  Setting DisabledPlans to: $($LicenseOptions.DisabledServicePlans -join ',')  "
+          $MSOLUserAccount | Set-MsolUserLicense -LicenseOptions $LicenseOptions
+        }
+        else {
+          # The user IS LICENSED in some capacity, but not with the desired license AccountSkuID.  Instead of klobbering the existing license, let's generate a warning in the event log.
+          $UserAssignedLicenses = $($MSOLUserAccount.Licenses | Select-Object -ExpandProperty AccountSkuID) -join ','
+          Write-EventLog -LogName "Application" -Source $LogName -EntryType Warning -EventID 118 -Message @"
+User $($MSOLUserAccount.UserPrincipalName) is licensed, but does not have the $License assigned.
+Currently assigned licenses are: $UserAssignedLicenses.  
+Unable to update license options
+"@
+        }
+
+
+      }
+      else 
+      {
+        #User account was not licensed.  Add the supplied license to the account
+        Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 120 -Message "User $($MSOLUserAccount.UserPrincipalName) was not previously licensed.  Applying the $License."
+        $MSOLUserAccount | Set-MsolUserLicense  -AddLicenses $License -LicenseOptions $LicenseOptions -ErrorAction "Stop"
+      }
+    }
+    Catch
+    {
+      Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 114 -Message "Assign License Failed $($_ | out-string)"
+    }
+  }
+  Else
+  {
+    Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 115 -Message "WhatIf: Assigning license: $StudentLicense to $student"
+  }   
+}
+
 #Script Defaults
 #create emtpy arrays for staff/students
 $Faculty = @()
@@ -125,11 +185,11 @@ ForEach($User in $Unlicensed)
   #Determine if the account lives in a student OU, otherwise it's staff
   If($x.DistinguishedName -ilike $StudentOU)
   {
-    $Students += $x.UserPrincipalName
+    $Students += $User
   }
   Else
   {
-    $Faculty += $x.UserPrincipalName
+    $Faculty += $User
   }
 }
 Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 106 -Message "Unlicensed Students: $($Students.Count)"
@@ -164,22 +224,7 @@ If ($Students.count -gt 0)
   ForEach($student in $Students)
   {
     #Apply licensing
-    If($Commit)
-    {
-      Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 113 -Message "Assigning license: $StudentLicense to $student"
-      Try
-      {
-        Set-MsolUserLicense -UserPrincipalName $student -AddLicenses $StudentLicense -LicenseOptions $StudentPlanService -ErrorAction "Stop"
-      }
-      Catch
-      {
-        Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 114 -Message "Assign License Failed $($_ | out-string)"
-      }
-    }
-    Else
-    {
-      Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 115 -Message "WhatIf: Assigning license: $StudentLicense to $student"
-    }   
+    Set-O365License -UserPrincipalName $student -License $StudentLicense -LicenseOptions $StudentPlanService -Commit $Commit
   }
 }
 Else
@@ -194,22 +239,7 @@ If ($Faculty.count -gt 0)
   ForEach($staff in $Faculty)
   {
     #Apply licensing
-    If($Commit)
-    {
-      Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 118 -Message "Assigning license: $FacultyLicense to $staff"
-      Try
-      {
-        Set-MsolUserLicense -UserPrincipalName $staff -AddLicenses $FacultyLicense -LicenseOptions $FacultyPlanService -ErrorAction "Stop"
-      }
-      Catch
-      {
-        Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 119 -Message "Assign License Failed $($_ | out-string)"
-      }
-    }
-    Else
-    {
-      Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 120 -Message"WhatIf: Assigning license: $FacultyLicense to $staff"
-    }   
+    Set-O365License -UserPrincipalName $staff -License $FacultyLicense -LicenseOptions $FacultyPlanService -Commit $Commit
   }
 }
 Else
