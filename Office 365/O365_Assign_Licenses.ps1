@@ -68,47 +68,57 @@ Function Set-O365License
     $LicenseOptions,
     $Commit
   )
-  If($Commit)
+ 
+  Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 113 -Message "Processing license: $License for $($MSOLUserAccount.UserPrincipalName)"
+  Try
   {
-    Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 113 -Message "Processing license: $License for $($MSOLUserAccount.UserPrincipalName)"
-    Try
+    ##### Here, we need to see what licenses the user already has, and deal with the delta
+    if($MSOLUserAccount.isLicensed)
     {
-      ##### Here, we need to see what licenses the user already has, and deal with the delta
-      if($MSOLUserAccount.isLicensed)
+      #Since there are multiple license SKUs, we must determine if the user actually has the desired license on their account.
+      $OperableLicense = $MSOLUserAccount.Licenses | ?{$_.AccountSkuID -eq $License}
+      if ($OperableLicense.count -eq 1 )
       {
-        #Since there are multiple license SKUs, we must determine if the user actually has the desired license on their account.
-        $OperableLicense = $MSOLUserAccount.Licenses | ?{$_.AccountSkuID -eq $License}
-        if ($OperableLicense.count -eq 1 )
-        {
+        If($Commit)
+        {  
           Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 119 -Message "User $($MSOLUserAccount.UserPrincipalName) has the $License assigned.  Setting DisabledPlans to: $($LicenseOptions.DisabledServicePlans -join ',')  "
           $MSOLUserAccount | Set-MsolUserLicense -LicenseOptions $LicenseOptions -ErrorAction "Stop"
         }
-        else 
+        else
         {
-          # The user IS LICENSED in some capacity, but not with the desired license AccountSkuID.  Instead of klobbering the existing license, let's generate a warning in the event log.
-          $UserAssignedLicenses = $($MSOLUserAccount.Licenses | Select-Object -ExpandProperty AccountSkuID) -join ','
-          Write-EventLog -LogName "Application" -Source $LogName -EntryType Warning -EventID 118 -Message @"
+          Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 129 -Message "WhatIf: User $($MSOLUserAccount.UserPrincipalName) has the $License assigned.  Setting DisabledPlans to: $($LicenseOptions.DisabledServicePlans -join ',')  "
+        }
+       
+      }
+      else 
+      {
+        # The user IS LICENSED in some capacity, but not with the desired license AccountSkuID.  Instead of klobbering the existing license, let's generate a warning in the event log.
+        $UserAssignedLicenses = $($MSOLUserAccount.Licenses | Select-Object -ExpandProperty AccountSkuID) -join ','
+        Write-EventLog -LogName "Application" -Source $LogName -EntryType Warning -EventID 118 -Message @"
 User $($MSOLUserAccount.UserPrincipalName) is licensed, but does not have the $License assigned.
 Currently assigned licenses are: $UserAssignedLicenses.  
 Unable to update license options
 "@
-        }
       }
-      else 
-      {
-        #User account was not licensed.  Add the supplied license to the account
+    }
+    else 
+    {
+      If($Commit)
+      {  
         Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 120 -Message "User $($MSOLUserAccount.UserPrincipalName) was not previously licensed.  Applying license: $License."
         $MSOLUserAccount | Set-MsolUserLicense  -AddLicenses $License -LicenseOptions $LicenseOptions -ErrorAction "Stop"
       }
-    }
-    catch
-    {
-      Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 114 -Message "Assign License Failed $($_ | out-string)"
+      else
+      {
+        Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 130 -Message "WhatIf: User $($MSOLUserAccount.UserPrincipalName) was not previously licensed.  Applying license: $License."
+      }
+      #User account was not licensed.  Add the supplied license to the account
+     
     }
   }
-  else
+  catch
   {
-    Write-EventLog -LogName "Application" -Source $LogName -EntryType Information -EventID 115 -Message "WhatIf: Assigning license: $License to $($MSOLUserAccount.UserPrincipalName)"
+    Write-EventLog -LogName "Application" -Source $LogName -EntryType Error -EventID 114 -Message "Assign License Failed $($_ | out-string)"
   }   
 }
 
