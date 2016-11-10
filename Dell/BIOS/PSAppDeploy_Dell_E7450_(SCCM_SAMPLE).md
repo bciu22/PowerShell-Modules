@@ -1,4 +1,4 @@
-#SCCM Detection Logic (PowerShell)
+# SCCM Detection Logic (PowerShell)
 ```
 #Set minimum bios version
 $BiosMinimum = "A10"
@@ -15,7 +15,7 @@ If($Bios.SMBIOSBIOSVersion -ge $BiosMinimum)
 #requirements not met, return nothing
 ```
 
-#SCCM Return Code (Dell BIOS Returns are non-standard)
+# SCCM Return Code (Dell BIOS Returns are non-standard)
 
  - Value: 2 
  - Code Type: Soft Reboot 
