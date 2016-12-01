@@ -71,7 +71,9 @@ Function Remove-Spam{
 	[Parameter()]
 	[Switch]$LogOnly,
 	[Parameter()]
-	[Switch]$Delete =$FALSE
+	[Switch]$Delete =$FALSE,
+	[Parameter()]
+	[String]$Database
 	)
 
 	$searchterms = @()
@@ -134,7 +136,7 @@ Function Remove-Spam{
 	else
 	{
 	#$Mailboxes = Get-Mailbox -ResultSize Unlimited
-	& Get-Mailbox -ResultSize Unlimited | Search-Mailbox  @Parameters
+	& Get-Mailbox -Database $(Get-MailboxDatabase $Database) -ResultSize Unlimited | Search-Mailbox  @Parameters
 	}
 	#or, if you want to do specific sources: @( "mailbox1", "mailbox2", "mailbox3", "mailbox4", "") | Get-mailbox | Search-Mailbox -SearchQuery {Subject:"Detected an unauthorized user attempting to access the SNMP interfac"} -TargetMailbox "spamdump" -TargetFolder "Derp" -LogOnly -LogLevel full
 }
