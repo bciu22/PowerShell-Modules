@@ -65,7 +65,7 @@ Function Remove-Spam{
 	[Parameter(Mandatory=$False,Position=7)]
 	[String]$TargetMailbox="SpamDump",
 	[Parameter(Mandatory=$False,Position=8)]
-	[String]$TargetFolder= "Spam - $(Get-Date -format d)$(Get-Date -format t)",
+	[String]$TargetFolder= "Spam - $(Get-Date -format d) $(Get-Date -format t)",
 	[Parameter(Mandatory=$False,Position=9)]
 	[String]$Identity,
 	[Parameter()]
@@ -127,6 +127,8 @@ Function Remove-Spam{
 	$SearchString = $($searchterms -join " AND ")
 
 	$Parameters.Add("SearchQuery","$SearchString")
+	$Parameters.Add("Confirm",$false)
+
 	$parameters
 
 	if($Identity)
@@ -135,8 +137,17 @@ Function Remove-Spam{
 	}
 	else
 	{
-	#$Mailboxes = Get-Mailbox -ResultSize Unlimited
-	& Get-Mailbox -Database $(Get-MailboxDatabase $Database) -ResultSize Unlimited | Search-Mailbox  @Parameters
+		#$Mailboxes = Get-Mailbox -ResultSize Unlimited
+		$SearchScriptBlock = {
+			Add-PSSnapIn *exchange* -erroraction SilentlyContinue
+			$parameters = $args[1]
+			$Database = Get-MailboxDatabase -Identity $($args[0])
+			Get-Mailbox -Database  $Database -ResultSize Unlimited | Search-Mailbox  @parameters
+		}
+		Get-MailboxDatabase | %{  
+			Start-Job -ScriptBlock $SearchScriptBlock -ArgumentList $($_.Name), $Parameters	
+			return
+		}
 	}
 	#or, if you want to do specific sources: @( "mailbox1", "mailbox2", "mailbox3", "mailbox4", "") | Get-mailbox | Search-Mailbox -SearchQuery {Subject:"Detected an unauthorized user attempting to access the SNMP interfac"} -TargetMailbox "spamdump" -TargetFolder "Derp" -LogOnly -LogLevel full
 }
