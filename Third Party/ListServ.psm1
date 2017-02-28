@@ -12,22 +12,23 @@
 #>
 
 
-function Get-List{
-[cmdletbinding()]
-param(
-$ListFile
-)
-<#
-.SYNOPSIS
-	Read a LISTSERV List file, and return a PowerShell Object representing the list
-.EXAMPLE
-	Find All Lists containing Charles
-	$Lists = Get-ChildItem -Path .\MAIN\ -Filter *.LIST | %{Get-List $_.FullName}
-	$Lists | %{ $_ | %{ $MS = $_.members | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {$_.ListName} }}
-	$Lists | %{ $_ | %{ $MS = $_.owners | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {$_.ListName} }}
-	$Lists | %{ $_ | %{ $MS = $_.senders | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {$_.ListName} }}
-	$Lists | %{ $_ | %{ $MS = $_.Senders | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {[PSCustomObject]@{"List Name"= $_.ListName; "Search Member"= $MS | select-object -expandproperty Email; "Owners"=$_.owners | select-object -expandproperty Email} }} }  | Select-Object "List Name" | cli
-#>
+function Get-ListDefinition
+{
+	[cmdletbinding()]
+	param(
+	$ListFile
+	)
+	<#
+	.SYNOPSIS
+		Read a LISTSERV List file, and return a PowerShell Object representing the list
+	.EXAMPLE
+		Find All Lists containing Charles
+		$Lists = Get-ChildItem -Path .\MAIN\ -Filter *.LIST | %{Get-List $_.FullName}
+		$Lists | %{ $_ | %{ $MS = $_.members | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {$_.ListName} }}
+		$Lists | %{ $_ | %{ $MS = $_.owners | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {$_.ListName} }}
+		$Lists | %{ $_ | %{ $MS = $_.senders | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {$_.ListName} }}
+		$Lists | %{ $_ | %{ $MS = $_.Senders | ?{$_.Name -like "*Lesley Carr*"}; if ($MS) {[PSCustomObject]@{"List Name"= $_.ListName; "Search Member"= $MS | select-object -expandproperty Email; "Owners"=$_.owners | select-object -expandproperty Email} }} }  | Select-Object "List Name" | cli
+	#>
 	$PATHTOLISTEXE = '\\LISTS.bucksiu.org\C$\Program Files\LISTSERV\MAIN'
 	$LISTContent =$null
 	$LISTContent = &("$PATHTOLISTEXE\listview.exe") $ListFile
@@ -78,4 +79,27 @@ $ListFile
 	Add-Member -InputObject $ListObject -MemberType NoteProperty -Name "Owners" -Value $Owners
 	Add-Member -InputObject $ListObject -MemberType NoteProperty -Name "Members" -Value $Members
 	$ListObject
+}
+
+function Get-ListJob
+{
+	[cmdletbinding()]
+	param(
+	$JobFile
+	)
+	<#
+	.SYNOPSIS
+		Read a LISTSERV Job file, and return a the text of the Job
+	
+	.EXAMPLE
+		Get all list failures within a date range
+		$Jobs = Get-ChildItem -Path '\\LISTS.bucksiu.org\C$\Program Files\LISTSERV\SPOOL' -Filter *.DELETED | 
+			Where-Object {$_.LastWriteTime -gt (Get-Date).AddDays(-6) -and  $_.LastWriteTime -lt (Get-Date).AddDays(-5)}
+
+		$Jobs | ?{ $(Get-ListJob -JobFile $_.FullName) -like "*smith*"} 
+	#>
+	$PATHTOLISTEXE = '\\LISTS.bucksiu.org\C$\Program Files\LISTSERV\SPOOL'
+	
+	$JobContent = &("$PATHTOLISTEXE\jobview.exe") $JobFile
+	$JobContent
 }
