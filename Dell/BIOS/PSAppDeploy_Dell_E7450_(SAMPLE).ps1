@@ -105,25 +105,33 @@ Try {
 		##* PRE-INSTALLATION
 		##*===============================================
 		[string]$installPhase = 'Pre-Installation'
-        Write-Log -Message "Checking status of BitLocker"
-        $bltemp = Get-BitLockerVolume
-        ForEach($x in $bltemp)
-        {
-            If($x.VolumeType -eq "OperatingSystem")
-            {
-                $blOS = $x
-            }
-        }
-        Write-Log -Message "Found OperatingSystem volume at $blOS.MountPoint"
-        If($blOS.ProtectionStatus -eq "On")
-        {
-            Write-Log -Message "BitLocker is active on $blOS.MountPoint, Suspending BitLocker for one reboot"
-            Suspend-BitLocker -MountPoint $blOS.MountPoint -RebootCount 1 -Confirm:$False
-        }
-        Else
-        {
-            Write-Log -Message "Bitlocker is not active on $blOS.MountPoint, no need to suspend"
-        }
+		Try
+		{
+			Write-Log -Message "Checking status of BitLocker"
+			$bltemp = Get-BitLockerVolume
+			ForEach($x in $bltemp)
+			{
+				If($x.VolumeType -eq "OperatingSystem")
+				{
+					$blOS = $x
+				}
+			}
+			Write-Log -Message "Found OperatingSystem volume at $blOS.MountPoint"
+			If($blOS.ProtectionStatus -eq "On")
+			{
+				Write-Log -Message "BitLocker is active on $blOS.MountPoint, Suspending BitLocker for one reboot"
+				Suspend-BitLocker -MountPoint $blOS.MountPoint -RebootCount 1 -Confirm:$False
+			}
+			Else
+			{
+				Write-Log -Message "Bitlocker is not active on $blOS.MountPoint, no need to suspend"
+			}			
+		}
+		Catch
+		{
+			Write-Log -Message "An error was thrown attempting to view/modify BitLocker status"
+		}
+
 		
 		## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
 		#Show-InstallationWelcome -AllowDefer -DeferTimes 3 -CheckDiskSpace -PersistPrompt
